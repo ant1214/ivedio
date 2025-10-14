@@ -1,63 +1,54 @@
+import 'dart:developer' as developer;  // 添加这行导入
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:ivideo/core/constants/app_constants.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/foundation.dart';
 
 class SupabaseService {
-  static bool _isInitialized = false;
-  static String? _initializationError;
-
   static Future<void> initialize() async {
     try {
-      // 防止重复初始化
-      if (_isInitialized) return;
+      String supabaseUrl;
+      String supabaseAnonKey;
 
-      // 确保环境变量已加载
-      await dotenv.load(fileName: '.env');
+      if (kIsWeb) {
+        // Web 环境使用硬编码配置
+        supabaseUrl = 'https://trbiuadvichcmfgxhocb.supabase.co';
+        supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYml1YWR2aWNoY21mZ3hob2NiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAzOTQ0OTYsImV4cCI6MjA3NTk3MDQ5Nn0.T7jdF4cDeQMVbJETboEwrlZDgF1tTKUKa2EkqL9IBE8';
+        developer.log('Web环境: 使用硬编码配置', name: 'Supabase');
+      } else {
+        // 移动端使用 .env 文件
+        await dotenv.load(fileName: '.env');
+        supabaseUrl = dotenv.get('SUPABASE_URL', fallback: '');
+        supabaseAnonKey = dotenv.get('SUPABASE_ANON_KEY', fallback: '');
+        developer.log('移动端环境: 使用.env配置', name: 'Supabase');
+      }
       
-      // 验证配置
-      _validateConfiguration();
-
+      _validateConfiguration(supabaseUrl, supabaseAnonKey);
+      
       await Supabase.initialize(
-        url: AppConstants.supabaseUrl,
-        anonKey: AppConstants.supabaseAnonKey,
+        url: supabaseUrl,
+        anonKey: supabaseAnonKey,
       );
       
-      _isInitialized = true;
-      _initializationError = null;
-      print('✅ Supabase初始化成功');
+      developer.log('Supabase初始化成功!', name: 'Supabase');
     } catch (e) {
-      _initializationError = e.toString();
-      print('❌ Supabase初始化失败: $e');
+      developer.log('Supabase初始化失败: $e', name: 'Supabase', error: e);
       rethrow;
     }
   }
 
-  static void _validateConfiguration() {
-    if (AppConstants.supabaseUrl.isEmpty) {
-      throw Exception('SUPABASE_URL未配置，请检查.env文件');
+  static void _validateConfiguration(String url, String anonKey) {
+    if (url.isEmpty || anonKey.isEmpty) {
+      throw Exception('SUPABASE_URL 或 SUPABASE_ANON_KEY 未配置，请检查.env文件');
     }
-    if (AppConstants.supabaseAnonKey.isEmpty) {
-      throw Exception('SUPABASE_ANON_KEY未配置，请检查.env文件');
+    
+    // 验证 URL 格式
+    if (!url.startsWith('https://')) {
+      throw Exception('SUPABASE_URL 格式不正确，应以 https:// 开头');
     }
-    if (!AppConstants.supabaseUrl.startsWith('https://')) {
-      throw Exception('SUPABASE_URL格式不正确，应以https://开头');
-    }
-  }
-
-  static SupabaseClient get client {
-    _checkInitialization();
-    return Supabase.instance.client;
-  }
-
-  static void _checkInitialization() {
-    if (!_isInitialized) {
-      throw Exception(
-        'Supabase尚未初始化。请在main()函数中调用: await SupabaseService.initialize()'
-      );
+    
+    // 验证 key 长度（基本验证）
+    if (anonKey.length < 10) {
+      throw Exception('SUPABASE_ANON_KEY 格式不正确');
     }
   }
-
-  // 辅助方法：检查初始化状态
-  static bool get isInitialized => _isInitialized;
-  static String? get initializationError => _initializationError;
 }
