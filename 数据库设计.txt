@@ -19,6 +19,10 @@ CREATE TABLE IF NOT EXISTS videos (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+ALTER TABLE videos DROP CONSTRAINT IF EXISTS videos_video_type_check;
+
+ALTER TABLE videos ADD CONSTRAINT videos_video_type_check 
+CHECK (video_type IN ('电影', '电视剧', '动漫', '综艺', '纪录片', '其他'));
 -- 2. 创建标签表
 CREATE TABLE IF NOT EXISTS tags (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -90,6 +94,8 @@ CREATE POLICY "用户可以添加观看历史" ON watch_history FOR INSERT WITH 
 CREATE POLICY "用户可以更新观看历史" ON watch_history FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "用户可以删除观看历史" ON watch_history FOR DELETE USING (auth.uid() = user_id);
 
+CREATE POLICY "允许认证用户更新视频" ON videos
+FOR UPDATE USING (auth.role() = 'authenticated');
 
 -- 插入常用标签
 INSERT INTO tags (name, color) VALUES
@@ -149,3 +155,16 @@ WHERE
   AND t.table_name IN ('videos', 'tags', 'video_tags', 'favorites', 'watch_history')
 ORDER BY 
   t.table_name;
+
+  -- 创建增加观看次数的函数
+CREATE OR REPLACE FUNCTION increment_views(video_id UUID)
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  UPDATE videos 
+  SET views_count = views_count + 1,
+      updated_at = NOW()
+  WHERE id = video_id;
+END;
+$$;
