@@ -1,11 +1,15 @@
-import 'dart:developer' as developer;  // 添加这行导入
+import 'dart:developer' as developer;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
 
 class SupabaseService {
+  static bool _isInitialized = false;
+
   static Future<void> initialize() async {
     try {
+      if (_isInitialized) return;
+      
       String supabaseUrl;
       String supabaseAnonKey;
 
@@ -29,6 +33,7 @@ class SupabaseService {
         anonKey: supabaseAnonKey,
       );
       
+      _isInitialized = true;
       developer.log('Supabase初始化成功!', name: 'Supabase');
     } catch (e) {
       developer.log('Supabase初始化失败: $e', name: 'Supabase', error: e);
@@ -41,14 +46,20 @@ class SupabaseService {
       throw Exception('SUPABASE_URL 或 SUPABASE_ANON_KEY 未配置，请检查.env文件');
     }
     
-    // 验证 URL 格式
     if (!url.startsWith('https://')) {
       throw Exception('SUPABASE_URL 格式不正确，应以 https:// 开头');
     }
     
-    // 验证 key 长度（基本验证）
     if (anonKey.length < 10) {
       throw Exception('SUPABASE_ANON_KEY 格式不正确');
     }
+  }
+
+  // 🔧 添加这个 client getter 方法
+  static SupabaseClient get client {
+    if (!_isInitialized) {
+      throw Exception('Supabase 尚未初始化，请先调用 SupabaseService.initialize()');
+    }
+    return Supabase.instance.client;
   }
 }

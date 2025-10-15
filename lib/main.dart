@@ -1,7 +1,10 @@
 import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:ivideo/core/providers/auth_provider.dart';
 import 'package:ivideo/core/supabase/supabase_client.dart';
+import 'package:ivideo/features/home/home_page.dart' show HomePage;
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
@@ -19,16 +22,16 @@ void main() async {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+  return ChangeNotifierProvider(
+    create: (context) => AuthProvider(), 
+    child: MaterialApp(
       title: 'iVideo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: Scaffold(
-        body: Center(
-          child: Text('iVideo项目启动成功!'),
-        ),
-      ),
+      debugShowCheckedModeBanner: false, 
+       home: HomePage(), 
+    ),
     );
   }
 }
