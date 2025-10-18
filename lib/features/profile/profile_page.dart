@@ -1,685 +1,4 @@
 
-// import 'package:flutter/material.dart';
-// import 'package:ivideo/core/services/favorite_service.dart';
-// import 'package:ivideo/core/supabase/supabase_client.dart';
-// import 'package:provider/provider.dart';
-// import 'package:ivideo/core/providers/auth_provider.dart';
-// import 'package:ivideo/shared/models/video_model.dart';
-// import 'package:ivideo/shared/widgets/video_card.dart';
-// import 'package:supabase_flutter/supabase_flutter.dart';
-
-// class ProfilePage extends StatefulWidget {
-//   const ProfilePage({super.key});
-
-//   @override
-//   State<ProfilePage> createState() => _ProfilePageState();
-// }
-
-// class _ProfilePageState extends State<ProfilePage> {
-//   int _selectedIndex = 0; // 0: 用户信息, 1: 我的收藏, 2: 观看历史
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: const Text('个人中心'),
-//         backgroundColor: Colors.white,
-//         foregroundColor: Colors.black,
-//         elevation: 1,
-//         actions: [
-//           IconButton(
-//             icon: const Icon(Icons.settings),
-//             onPressed: () {
-//               _showSettingsDialog();
-//             },
-//           ),
-//         ],
-//       ),
-//       body: Consumer<AuthProvider>(
-//         builder: (context, authProvider, child) {
-//           if (!authProvider.isLoggedIn) {
-//             return _buildNotLoggedIn();
-//           }
-          
-//           return Column(
-//             children: [
-//               // 顶部用户信息卡片
-//               _buildUserInfoCard(authProvider),
-//               // 选项卡
-//               _buildTabBar(),
-//               // 内容区域
-//               Expanded(
-//                 child: _buildContent(authProvider),
-//               ),
-//             ],
-//           );
-//         },
-//       ),
-//     );
-//   }
-
-//   Widget _buildNotLoggedIn() {
-//     return Center(
-//       child: Column(
-//         mainAxisAlignment: MainAxisAlignment.center,
-//         children: [
-//           const Icon(Icons.person_off, size: 64, color: Colors.grey),
-//           const SizedBox(height: 16),
-//           const Text(
-//             '尚未登录',
-//             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-//           ),
-//           const SizedBox(height: 8),
-//           const Text(
-//             '登录后查看个人中心',
-//             style: TextStyle(color: Colors.grey),
-//           ),
-//           const SizedBox(height: 24),
-//           ElevatedButton(
-//             onPressed: () {
-//               Navigator.pop(context);
-//             },
-//             child: const Text('返回首页'),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-
-//   Widget _buildUserInfoCard(AuthProvider authProvider) {
-//     return Container(
-//       margin: const EdgeInsets.all(16),
-//       padding: const EdgeInsets.all(16),
-//       decoration: BoxDecoration(
-//         color: Colors.blue.shade50,
-//         borderRadius: BorderRadius.circular(12),
-//         border: Border.all(color: Colors.blue.shade100),
-//       ),
-//       child: Row(
-//         children: [
-//           // 用户头像
-//           Container(
-//             width: 60,
-//             height: 60,
-//             decoration: BoxDecoration(
-//               color: Colors.blue,
-//               shape: BoxShape.circle,
-//             ),
-//             child: const Icon(
-//               Icons.person,
-//               color: Colors.white,
-//               size: 30,
-//             ),
-//           ),
-//           const SizedBox(width: 16),
-//           // 用户信息
-//           Expanded(
-//             child: Column(
-//               crossAxisAlignment: CrossAxisAlignment.start,
-//               children: [
-//                 Text(
-//                   authProvider.user?.email ?? '用户',
-//                   style: const TextStyle(
-//                     fontSize: 16,
-//                     fontWeight: FontWeight.bold,
-//                   ),
-//                 ),
-//                 const SizedBox(height: 4),
-//                 Text(
-//                   'ID: ${_formatUserId(authProvider.user?.id)}',
-//                   style: TextStyle(
-//                     fontSize: 12,
-//                     color: Colors.grey.shade600,
-//                   ),
-//                 ),
-//                 const SizedBox(height: 4),
-//                 Text(
-//                   '注册时间: ${_formatRegistrationTime(authProvider.user?.createdAt)}',
-//                   style: TextStyle(
-//                     fontSize: 12,
-//                     color: Colors.grey.shade600,
-//                   ),
-//                 ),
-//               ],
-//             ),
-//           ),
-//           // 退出登录按钮
-//           IconButton(
-//             icon: const Icon(Icons.logout, color: Colors.red),
-//             onPressed: _showLogoutDialog,
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-
-//   Widget _buildTabBar() {
-//     return Container(
-//       margin: const EdgeInsets.symmetric(horizontal: 16),
-//       decoration: BoxDecoration(
-//         color: Colors.grey.shade100,
-//         borderRadius: BorderRadius.circular(8),
-//       ),
-//       child: Row(
-//         children: [
-//           _buildTabItem('用户信息', 0),
-//           _buildTabItem('我的收藏', 1),
-//           _buildTabItem('观看历史', 2),
-//         ],
-//       ),
-//     );
-//   }
-
-//   Widget _buildTabItem(String text, int index) {
-//     final isSelected = _selectedIndex == index;
-    
-//     return Expanded(
-//       child: GestureDetector(
-//         onTap: () {
-//           setState(() {
-//             _selectedIndex = index;
-//           });
-//         },
-//         child: Container(
-//           padding: const EdgeInsets.symmetric(vertical: 12),
-//           decoration: BoxDecoration(
-//             color: isSelected ? Colors.blue : Colors.transparent,
-//             borderRadius: BorderRadius.circular(8),
-//           ),
-//           child: Text(
-//             text,
-//             textAlign: TextAlign.center,
-//             style: TextStyle(
-//               color: isSelected ? Colors.white : Colors.grey.shade700,
-//               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-//             ),
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-
-//   Widget _buildContent(AuthProvider authProvider) {
-//     switch (_selectedIndex) {
-//       case 0:
-//         return _buildUserInfo();
-//       case 1:
-//         return _buildFavorites();
-//       case 2:
-//         return _buildWatchHistory();
-//       default:
-//         return _buildUserInfo();
-//     }
-//   }
-
-//   Widget _buildUserInfo() {
-//     return Consumer<AuthProvider>(
-//       builder: (context, authProvider, child) {
-//         final user = authProvider.user;
-        
-//         return ListView(
-//           padding: const EdgeInsets.all(16),
-//           children: [
-//             _buildInfoItem('用户ID', _formatUserId(user?.id)),
-//             _buildInfoItem('邮箱', user?.email ?? '未知'),
-//             _buildInfoItem('注册时间', _formatRegistrationTime(user?.createdAt)),
-//             _buildInfoItem('最后登录', _formatLastSignIn(user?.lastSignInAt)),
-//             _buildInfoItem('会员状态', '免费用户'),
-//             const SizedBox(height: 20),
-//             _buildActionButton('编辑资料', Icons.edit, () {
-//               _showEditProfileDialog();
-//             }),
-//             _buildActionButton('修改密码', Icons.lock, () {
-//               _showChangePasswordDialog();
-//             }),
-//           ],
-//         );
-//       },
-//     );
-//   }
-
-//   Widget _buildFavorites() {
-//     return FutureBuilder<List<Video>>(
-//       future: FavoriteService.getUserFavoriteVideos(),
-//       builder: (context, snapshot) {
-//         if (snapshot.connectionState == ConnectionState.waiting) {
-//           return const Center(child: CircularProgressIndicator());
-//         }
-        
-//         if (snapshot.hasError) {
-//           return Center(
-//             child: Column(
-//               mainAxisAlignment: MainAxisAlignment.center,
-//               children: [
-//                 const Icon(Icons.error, size: 64, color: Colors.red),
-//                 const SizedBox(height: 16),
-//                 const Text(
-//                   '加载失败',
-//                   style: TextStyle(fontSize: 16, color: Colors.red),
-//                 ),
-//                 const SizedBox(height: 8),
-//                 Text(
-//                   snapshot.error.toString(),
-//                   style: const TextStyle(fontSize: 12, color: Colors.grey),
-//                   textAlign: TextAlign.center,
-//                 ),
-//               ],
-//             ),
-//           );
-//         }
-        
-//         final favoriteVideos = snapshot.data ?? [];
-        
-//         if (favoriteVideos.isEmpty) {
-//           return Center(
-//             child: Column(
-//               mainAxisAlignment: MainAxisAlignment.center,
-//               children: [
-//                 const Icon(Icons.favorite_border, size: 64, color: Colors.grey),
-//                 const SizedBox(height: 16),
-//                 const Text(
-//                   '暂无收藏',
-//                   style: TextStyle(fontSize: 16, color: Colors.grey),
-//                 ),
-//                 const SizedBox(height: 8),
-//                 const Text(
-//                   '收藏你喜欢的视频，方便以后观看',
-//                   style: TextStyle(fontSize: 14, color: Colors.grey),
-//                 ),
-//               ],
-//             ),
-//           );
-//         }
-        
-//         return ListView.builder(
-//           padding: const EdgeInsets.all(16),
-//           itemCount: favoriteVideos.length,
-//           itemBuilder: (context, index) {
-//             final video = favoriteVideos[index];
-//             return VideoCard(video: video);
-//           },
-//         );
-//       },
-//     );
-//   }
-
-//   Widget _buildWatchHistory() {
-//     final historyVideos = <Video>[];
-    
-//     if (historyVideos.isEmpty) {
-//       return Center(
-//         child: Column(
-//           mainAxisAlignment: MainAxisAlignment.center,
-//           children: [
-//             const Icon(Icons.history, size: 64, color: Colors.grey),
-//             const SizedBox(height: 16),
-//             const Text(
-//               '暂无观看历史',
-//               style: TextStyle(fontSize: 16, color: Colors.grey),
-//             ),
-//             const SizedBox(height: 8),
-//             const Text(
-//               '观看视频后，历史记录会出现在这里',
-//               style: TextStyle(fontSize: 14, color: Colors.grey),
-//             ),
-//           ],
-//         ),
-//       );
-//     }
-    
-//     return ListView.builder(
-//       itemCount: historyVideos.length,
-//       itemBuilder: (context, index) {
-//         final video = historyVideos[index];
-//         return VideoCard(video: video);
-//       },
-//     );
-//   }
-
-//   Widget _buildInfoItem(String title, String value) {
-//     return Container(
-//       margin: const EdgeInsets.only(bottom: 12),
-//       padding: const EdgeInsets.all(16),
-//       decoration: BoxDecoration(
-//         color: Colors.white,
-//         borderRadius: BorderRadius.circular(8),
-//         border: Border.all(color: Colors.grey.shade200),
-//       ),
-//       child: Row(
-//         children: [
-//           Text(
-//             title,
-//             style: const TextStyle(fontWeight: FontWeight.bold),
-//           ),
-//           const Spacer(),
-//           Text(
-//             value,
-//             style: TextStyle(color: Colors.grey.shade600),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-
-//   Widget _buildActionButton(String text, IconData icon, VoidCallback onPressed) {
-//     return Container(
-//       margin: const EdgeInsets.only(bottom: 8),
-//       child: ListTile(
-//         leading: Icon(icon, color: Colors.blue),
-//         title: Text(text),
-//         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-//         onTap: onPressed,
-//         shape: RoundedRectangleBorder(
-//           borderRadius: BorderRadius.circular(8),
-//         ),
-//       ),
-//     );
-//   }
-
-//   void _showLogoutDialog() {
-//     showDialog(
-//       context: context,
-//       builder: (context) => AlertDialog(
-//         title: const Text('确认退出登录'),
-//         content: const Text('确定要退出当前账号吗？'),
-//         actions: [
-//           TextButton(
-//             onPressed: () => Navigator.pop(context),
-//             child: const Text('取消'),
-//           ),
-//           TextButton(
-//             onPressed: () {
-//               Navigator.pop(context);
-//               _logout();
-//             },
-//             child: const Text('退出登录', style: TextStyle(color: Colors.red)),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-
-//   void _logout() async {
-//     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-//     await authProvider.logout();
-//     Navigator.pop(context);
-//   }
-
-//   void _showSettingsDialog() {
-//     showDialog(
-//       context: context,
-//       builder: (context) => AlertDialog(
-//         title: const Text('设置'),
-//         content: const Column(
-//           mainAxisSize: MainAxisSize.min,
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           children: [
-//             Text('播放设置'),
-//             Text('通知设置'),
-//             Text('隐私设置'),
-//           ],
-//         ),
-//         actions: [
-//           TextButton(
-//             onPressed: () => Navigator.pop(context),
-//             child: const Text('关闭'),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-
-//   void _showEditProfileDialog() {
-//     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-//     final user = authProvider.user;
-    
-//     showDialog(
-//       context: context,
-//       builder: (context) => AlertDialog(
-//         title: const Text('编辑资料'),
-//         content: Column(
-//           mainAxisSize: MainAxisSize.min,
-//           children: [
-//             ListTile(
-//               leading: const Icon(Icons.person),
-//               title: const Text('用户名'),
-//               subtitle: Text(user?.email?.split('@').first ?? '用户'),
-//               trailing: const Icon(Icons.edit),
-//             ),
-//             ListTile(
-//               leading: const Icon(Icons.email),
-//               title: const Text('邮箱'),
-//               subtitle: Text(user?.email ?? '未知'),
-//             ),
-//           ],
-//         ),
-//         actions: [
-//           TextButton(
-//             onPressed: () => Navigator.pop(context),
-//             child: const Text('取消'),
-//           ),
-//           TextButton(
-//             onPressed: () {
-//               Navigator.pop(context);
-//               ScaffoldMessenger.of(context).showSnackBar(
-//                 const SnackBar(content: Text('资料更新成功')),
-//               );
-//             },
-//             child: const Text('保存'),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-
-// void _showChangePasswordDialog() {
-//   final TextEditingController currentPasswordController = TextEditingController();
-//   final TextEditingController newPasswordController = TextEditingController();
-//   final TextEditingController confirmPasswordController = TextEditingController();
-
-//   showDialog(
-//     context: context,
-//     builder: (context) => StatefulBuilder(
-//       builder: (context, setState) {
-//         return AlertDialog(
-//           title: const Text('修改密码'),
-//           content: Column(
-//             mainAxisSize: MainAxisSize.min,
-//             children: [
-//               TextField(
-//                 controller: currentPasswordController,
-//                 decoration: const InputDecoration(
-//                   labelText: '当前密码',
-//                   border: OutlineInputBorder(),
-//                 ),
-//                 obscureText: true,
-//               ),
-//               const SizedBox(height: 16),
-//               TextField(
-//                 controller: newPasswordController,
-//                 decoration: const InputDecoration(
-//                   labelText: '新密码',
-//                   border: OutlineInputBorder(),
-//                   hintText: '至少6位字符',
-//                 ),
-//                 obscureText: true,
-//               ),
-//               const SizedBox(height: 16),
-//               TextField(
-//                 controller: confirmPasswordController,
-//                 decoration: const InputDecoration(
-//                   labelText: '确认新密码',
-//                   border: OutlineInputBorder(),
-//                 ),
-//                 obscureText: true,
-//                 onChanged: (value) {
-//                   setState(() {});
-//                 },
-//               ),
-//               const SizedBox(height: 8),
-//               if (newPasswordController.text.isNotEmpty &&
-//                   confirmPasswordController.text.isNotEmpty &&
-//                   newPasswordController.text != confirmPasswordController.text)
-//                 const Text(
-//                   '两次输入的密码不一致',
-//                   style: TextStyle(color: Colors.red, fontSize: 12),
-//                 ),
-//             ],
-//           ),
-//           actions: [
-//             TextButton(
-//               onPressed: () => Navigator.pop(context),
-//               child: const Text('取消'),
-//             ),
-//             TextButton(
-//               onPressed: () async {
-//                 final currentPassword = currentPasswordController.text.trim();
-//                 final newPassword = newPasswordController.text.trim();
-//                 final confirmPassword = confirmPasswordController.text.trim();
-
-//                 // 输入验证
-//                 if (currentPassword.isEmpty) {
-//                   ScaffoldMessenger.of(context).showSnackBar(
-//                     const SnackBar(content: Text('请输入当前密码')),
-//                   );
-//                   return;
-//                 }
-
-//                 if (newPassword.isEmpty) {
-//                   ScaffoldMessenger.of(context).showSnackBar(
-//                     const SnackBar(content: Text('请输入新密码')),
-//                   );
-//                   return;
-//                 }
-
-//                 if (newPassword.length < 6) {
-//                   ScaffoldMessenger.of(context).showSnackBar(
-//                     const SnackBar(content: Text('新密码至少需要6位字符')),
-//                   );
-//                   return;
-//                 }
-
-//                 if (newPassword != confirmPassword) {
-//                   ScaffoldMessenger.of(context).showSnackBar(
-//                     const SnackBar(content: Text('两次输入的密码不一致')),
-//                   );
-//                   return;
-//                 }
-
-//                 // 显示加载指示器
-//                 showDialog(
-//                   context: context,
-//                   barrierDismissible: false,
-//                   builder: (context) => const Center(
-//                     child: CircularProgressIndicator(),
-//                   ),
-//                 );
-
-//                 try {
-//                   // 调用 Supabase 修改密码 API
-//                   final response = await SupabaseService.client.auth.updateUser(
-//                     UserAttributes(
-//                       password: newPassword,
-//                     ),
-//                   );
-
-//                   // 关闭加载指示器
-//                   Navigator.pop(context);
-
-//                   if (response.user != null) {
-//                     // 关闭修改密码对话框
-//                     Navigator.pop(context);
-                    
-//                     ScaffoldMessenger.of(context).showSnackBar(
-//                       const SnackBar(content: Text('密码修改成功')),
-//                     );
-//                   } else {
-//                     ScaffoldMessenger.of(context).showSnackBar(
-//                       const SnackBar(content: Text('密码修改失败')),
-//                     );
-//                   }
-//                 } catch (e) {
-//                   // 关闭加载指示器
-//                   Navigator.pop(context);
-                  
-//                   String errorMessage = '密码修改失败';
-                  
-//                   if (e.toString().contains('Password should be at least 6 characters')) {
-//                     errorMessage = '密码至少需要6位字符';
-//                   } else if (e.toString().contains('Invalid login credentials')) {
-//                     errorMessage = '当前密码错误';
-//                   } else if (e.toString().contains('Email not confirmed')) {
-//                     errorMessage = '请先验证邮箱';
-//                   }
-                  
-//                   ScaffoldMessenger.of(context).showSnackBar(
-//                     SnackBar(content: Text(errorMessage)),
-//                   );
-//                 }
-//               },
-//               child: const Text('确认修改'),
-//             ),
-//           ],
-//         );
-//       },
-//     ),
-//   );
-// }
-//   // 时间格式化方法
-//   String _formatRegistrationTime(String? createdAt) {
-//     if (createdAt == null) return '未知';
-    
-//     try {
-//       final dateTime = DateTime.parse(createdAt);
-//       final localTime = dateTime.toLocal();
-//       return '${localTime.year}年${localTime.month}月${localTime.day}日 ${_formatTime(localTime)}';
-//     } catch (e) {
-//       print('时间格式化错误: $e, 原始时间: $createdAt');
-//       return '未知';
-//     }
-//   }
-
-//   String _formatLastSignIn(String? lastSignInAt) {
-//     if (lastSignInAt == null) return '未知';
-    
-//     try {
-//       final dateTime = DateTime.parse(lastSignInAt);
-//       final localTime = dateTime.toLocal();
-//       final now = DateTime.now();
-//       final difference = now.difference(localTime);
-      
-//       if (localTime.day == now.day && 
-//           localTime.month == now.month && 
-//           localTime.year == now.year) {
-//         return '今天 ${_formatTime(localTime)}';
-//       }
-      
-//       final yesterday = now.subtract(const Duration(days: 1));
-//       if (localTime.day == yesterday.day && 
-//           localTime.month == yesterday.month && 
-//           localTime.year == yesterday.year) {
-//         return '昨天 ${_formatTime(localTime)}';
-//       }
-      
-//       return '${localTime.year}年${localTime.month}月${localTime.day}日 ${_formatTime(localTime)}';
-//     } catch (e) {
-//       print('最后登录时间格式化错误: $e, 原始时间: $lastSignInAt');
-//       return '未知';
-//     }
-//   }
-
-//   String _formatTime(DateTime dateTime) {
-//     final hour = dateTime.hour.toString().padLeft(2, '0');
-//     final minute = dateTime.minute.toString().padLeft(2, '0');
-//     return '$hour:$minute';
-//   }
-
-//   String _formatUserId(String? userId) {
-//     if (userId == null || userId.isEmpty) return '未知';
-//     if (userId.length < 8) return userId;
-//     return '${userId.substring(0, 8)}...';
-//   }
-// }
 import 'package:flutter/material.dart';
 import 'package:ivideo/core/services/favorite_service.dart';
 import 'package:ivideo/core/services/watch_history_service.dart';
@@ -716,10 +35,11 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-String _getDisplayName() {
-  final displayName = _userMetadata?['display_name'] as String?;
-  return displayName?.isNotEmpty == true ? displayName! : '未命名用户';
-}
+  String _getDisplayName() {
+    final displayName = _userMetadata?['display_name'] as String?;
+    return displayName?.isNotEmpty == true ? displayName! : '未命名用户';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1015,7 +335,6 @@ String _getDisplayName() {
     );
   }
 
- 
   Widget _buildFavorites() {
     return FutureBuilder<List<Video>>(
       future: FavoriteService.getUserFavoriteVideos(),
@@ -1033,7 +352,10 @@ String _getDisplayName() {
                 const SizedBox(height: 16),
                 const Text('加载失败', style: TextStyle(fontSize: 16, color: Colors.red)),
                 const SizedBox(height: 8),
-                Text(snapshot.error.toString(), style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                Text(
+                  snapshot.error.toString(), 
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
               ],
             ),
           );
@@ -1050,7 +372,10 @@ String _getDisplayName() {
                 const SizedBox(height: 16),
                 const Text('暂无收藏', style: TextStyle(fontSize: 16, color: Colors.grey)),
                 const SizedBox(height: 8),
-                const Text('收藏你喜欢的视频，方便以后观看', style: TextStyle(fontSize: 14, color: Colors.grey)),
+                const Text(
+                  '收藏你喜欢的视频，方便以后观看', 
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                ),
               ],
             ),
           );
@@ -1061,174 +386,108 @@ String _getDisplayName() {
           itemCount: favoriteVideos.length,
           itemBuilder: (context, index) {
             final video = favoriteVideos[index];
-            return VideoCard(video: video);
+            return VideoCard(
+              video: video,
+              onTap: () {
+                // 添加点击处理
+                print('点击收藏视频: ${video.title}');
+              },
+            );
           },
         );
       },
     );
   }
 
-  // Widget _buildWatchHistory() {
-  //   final historyVideos = <Video>[];
-    
-  //   if (historyVideos.isEmpty) {
-  //     return Center(
-  //       child: Column(
-  //         mainAxisAlignment: MainAxisAlignment.center,
-  //         children: [
-  //           const Icon(Icons.history, size: 64, color: Colors.grey),
-  //           const SizedBox(height: 16),
-  //           const Text('暂无观看历史', style: TextStyle(fontSize: 16, color: Colors.grey)),
-  //           const SizedBox(height: 8),
-  //           const Text('观看视频后，历史记录会出现在这里', style: TextStyle(fontSize: 14, color: Colors.grey)),
-  //         ],
-  //       ),
-  //     );
-  //   }
-    
-  //   return ListView.builder(
-  //     itemCount: historyVideos.length,
-  //     itemBuilder: (context, index) {
-  //       final video = historyVideos[index];
-  //       return VideoCard(video: video);
-  //     },
-  //   );
-  // }
   Widget _buildWatchHistory() {
-  return FutureBuilder<List<Video>>(
-    future: WatchHistoryService.getUserWatchHistory(),
-    builder: (context, snapshot) {
-      if (snapshot.connectionState == ConnectionState.waiting) {
-        return const Center(child: CircularProgressIndicator());
-      }
-      
-      if (snapshot.hasError) {
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error, size: 64, color: Colors.red),
-              const SizedBox(height: 16),
-              const Text(
-                '加载失败',
-                style: TextStyle(fontSize: 16, color: Colors.red),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                snapshot.error.toString(),
-                style: const TextStyle(fontSize: 12, color: Colors.grey),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        );
-      }
-      
-      final historyVideos = snapshot.data ?? [];
-      
-      if (historyVideos.isEmpty) {
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.history, size: 64, color: Colors.grey),
-              const SizedBox(height: 16),
-              const Text(
-                '暂无观看历史',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                '观看视频后，历史记录会出现在这里',
-                style: TextStyle(fontSize: 14, color: Colors.grey),
-              ),
-            ],
-          ),
-        );
-      }
-      
-      return Column(
-        children: [
-          // 清空历史按钮
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
+    return FutureBuilder<List<Video>>(
+      future: WatchHistoryService.getUserWatchHistory(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        
+        if (snapshot.hasError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                const Icon(Icons.error, size: 64, color: Colors.red),
+                const SizedBox(height: 16),
                 const Text(
-                  '观看历史',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  '加载失败',
+                  style: TextStyle(fontSize: 16, color: Colors.red),
                 ),
-                const Spacer(),
-                TextButton.icon(
-                  icon: const Icon(Icons.delete_outline, size: 18),
-                  label: const Text('清空历史'),
-                  onPressed: _showClearHistoryDialog,
+                const SizedBox(height: 8),
+                Text(
+                  snapshot.error.toString(),
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  textAlign: TextAlign.center,
                 ),
               ],
             ),
-          ),
-          // 视频列表
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: historyVideos.length,
-              itemBuilder: (context, index) {
-                final video = historyVideos[index];
-                return VideoCard(video: video);
-              },
+          );
+        }
+        
+        final historyVideos = snapshot.data ?? [];
+        
+        if (historyVideos.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.history, size: 64, color: Colors.grey),
+                const SizedBox(height: 16),
+                const Text(
+                  '暂无观看历史',
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  '观看视频后，历史记录会出现在这里',
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                ),
+              ],
             ),
-          ),
-        ],
-      );
-    },
-  );
-}
-
-// void _showClearHistoryDialog() {
-//   showDialog(
-//     context: context,
-//     builder: (context) => AlertDialog(
-//       title: const Text('清空观看历史'),
-//       content: const Text('确定要清空所有观看历史吗？此操作不可恢复。'),
-//       actions: [
-//         TextButton(
-//           onPressed: () => Navigator.pop(context),
-//           child: const Text('取消'),
-//         ),
-//         TextButton(
-//           onPressed: () async {
-//             Navigator.pop(context);
-            
-//             // 显示加载
-//             showDialog(
-//               context: context,
-//               barrierDismissible: false,
-//               builder: (context) => const Center(
-//                 child: CircularProgressIndicator(),
-//               ),
-//             );
-            
-//             final success = await WatchHistoryService.clearWatchHistory();
-            
-//             Navigator.pop(context); // 关闭加载对话框
-            
-//             if (success) {
-//               setState(() {}); // 刷新页面
-//               ScaffoldMessenger.of(context).showSnackBar(
-//                 const SnackBar(content: Text('观看历史已清空')),
-//               );
-//             } else {
-//               ScaffoldMessenger.of(context).showSnackBar(
-//                 const SnackBar(content: Text('清空失败')),
-//               );
-//             }
-//           },
-//           child: const Text('清空', style: TextStyle(color: Colors.red)),
-//         ),
-//       ],
-//     ),
-//   );
-// }
+          );
+        }
+        
+        return Column(
+          children: [
+            // 清空历史按钮
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  const Text(
+                    '观看历史',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const Spacer(),
+                  TextButton.icon(
+                    icon: const Icon(Icons.delete_outline, size: 18),
+                    label: const Text('清空历史'),
+                    onPressed: _showClearHistoryDialog,
+                  ),
+                ],
+              ),
+            ),
+            // 视频列表
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: historyVideos.length,
+                itemBuilder: (context, index) {
+                  final video = historyVideos[index];
+                  return VideoCard(video: video, onTap: () {  },);
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   void _showClearHistoryDialog() {
     showDialog(
